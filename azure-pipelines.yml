@@ -90,3 +90,50 @@ stages:
                   appType: 'webApp'
                   WebAppName: '$(arm_webApp)'
                   packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+
+  - stage: DeployTest
+    displayName: 'Deploy To Test'
+    variables: 
+         - group: 'YAML-Releases-Test'
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'Test'
+        strategy:
+         runOnce:
+           deploy:
+             steps:
+              - task: replacetokens@3
+                inputs:
+                  rootDirectory: '$(Pipeline.Workspace)/drop-arm'
+                  targetFiles: 'webapp.parameters.json'
+                  encoding: 'auto'
+                  writeBOM: true
+                  actionOnMissing: 'warn'
+                  keepToken: false
+                  tokenPrefix: '#'
+                  tokenSuffix: '#'
+                  useLegacyPattern: false
+                  enableTelemetry: true
+              
+              - task: AzureResourceManagerTemplateDeployment@3
+                inputs:
+                  deploymentScope: 'Resource Group'
+                  azureResourceManagerConnection: 'Visual Studio Professional with MSDN (b3c70d42-a0b9-4730-84a4-b0004a31f7b4)'
+                  subscriptionId: 'b3c70d42-a0b9-4730-84a4-b0004a31f7b4'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: 'yaml-releases-test'
+                  location: 'Australia East'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/drop-arm/webapp.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/drop-arm/webapp.parameters.json'
+                  deploymentMode: 'Incremental'
+             
+              - task: AzureRmWebAppDeployment@4
+                inputs:
+                  ConnectionType: 'AzureRM'
+                  azureSubscription: 'Visual Studio Professional with MSDN (b3c70d42-a0b9-4730-84a4-b0004a31f7b4)'
+                  appType: 'webApp'
+                  WebAppName: '$(arm_webApp)'
+                  packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
