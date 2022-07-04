@@ -6,91 +6,36 @@
 trigger:
 - main
 
-stages:
-  - stage: Build
-    jobs:
-      - job: buildwebapp
-        variables:
-          buildConfiguration: 'Release'
+variables:
+  buildConfiguration: 'Release'
 
-        pool:
-          vmImage: 'ubuntu-latest'
+pool:
+  vmImage: 'ubuntu-latest'
 
-        steps:
-        - task: UseDotNet@2
-          inputs:
-            packageType: 'sdk'
-            version: '5.x'
-        - task: DotNetCoreCLI@2
-          displayName: 'Build Application'
-          inputs:
-            command: 'publish'
-            publishWebProjects: true
-            arguments: '--configuration $(buildConfiguration) --output $(Build.BinariesDirectory)/$(Build.BuildId)'
-            modifyOutputPath: false
-            workingDirectory: 'src'
-          
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish Web Artifact'
-          inputs:
-            PathtoPublish: '$(Build.BinariesDirectory)/$(Build.BuildId)'
-            ArtifactName: 'drop-$(Build.BuildId)'
-            publishLocation: 'Container'
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '5.x'
+- task: DotNetCoreCLI@2
+  displayName: 'Build Application'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--configuration $(buildConfiguration) --output $(Build.BinariesDirectory)/$(Build.BuildId)'
+    modifyOutputPath: false
+    workingDirectory: 'src'
+  
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Web Artifact'
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)/$(Build.BuildId)'
+    ArtifactName: 'drop-$(Build.BuildId)'
+    publishLocation: 'Container'
 
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish ARM Artifact'
-          inputs:
-            PathtoPublish: 'deploy/'
-            ArtifactName: 'drop-arm'
-            publishLocation: 'Container'
-
-  - stage: deploytodev
-    displayName: 'Deploy to DEV'
-    variables:
-    - group: 'Ajith'
-    jobs:
-      - deployment: 
-        pool:
-          vmImage: 'ubuntu-latest'
-        environment: 'Dev' 
-        strategy: 
-         runOnce:
-          deploy:
-           steps:
-             - task: replacetokens@5
-               inputs:
-                 rootDirectory: '$(Pipelne.Workspace)/drop-arm'
-                 targetFiles: 'webapp.parameters.json'
-                 encoding: 'auto'
-                 tokenPattern: 'default'
-                 writeBOM: true
-                 actionOnMissing: 'warn'
-                 keepToken: false
-                 actionOnNoFiles: 'continue'
-                 enableTransforms: false
-                 enableRecursion: false
-                 useLegacyPattern: false
-                 enableTelemetry: true
-             - task: AzureResourceManagerTemplateDeployment@3
-               inputs:
-                 deploymentScope: 'Resource Group'
-                 azureResourceManagerConnection: 'Pay-As-You-Go(2)(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
-                 subscriptionId: 'af5a6fb3-b792-4f0e-aa58-7cf18b9cad30'
-                 action: 'Create Or Update Resource Group'
-                 resourceGroupName: 'Ajith_group'
-                 location: 'East Asia'
-                 templateLocation: 'Linked artifact'
-                 csmFile: '$(Pipelne.Workspace)/drop-arm/webapp.json'
-                 csmParametersFile: '$(Pipelne.Workspace)/drop-arm/webapp.parameters.json'
-                 deploymentMode: 'Incremental'
-
-             - task: AzureRmWebAppDeployment@4
-               inputs:
-                 ConnectionType: 'AzureRM'
-                 azureSubscription: 'Pay-As-You-Go(1)(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
-                 appType: 'webApp'
-                 WebAppName: '$(arm_webApp)'
-                 packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
-                    
-            
-           
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish ARM Artifact'
+  inputs:
+    PathtoPublish: 'deploy/'
+    ArtifactName: 'drop-arm'
+    publishLocation: 'Container'
