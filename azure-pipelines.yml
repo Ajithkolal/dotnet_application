@@ -9,36 +9,44 @@ trigger:
 stages:
   - stage: Build
     jobs:
-      - job: buildwebapp
+    - job: buildwebapp
     variables:
-        buildConfiguration: 'Release'
+      buildConfiguration: 'Release'
 
-        pool: 
-          vmImage: 'ubuntu-latest'
+    pool: 
+      vmImage: 'ubuntu-latest'
 
-        steps:
-        - script: echo Hello, world!
-          displayName: 'Run a one-line script'
+    steps:
+    - script: echo Hello, world!
+    displayName: 'Run a one-line script'
         
+    steps:
         - task: UseDotNet@2
           inputs:
             packageType: 'sdk'
-            version: '2.x'
+            version: '5.x'
+			
         - task: DotNetCoreCLI@2
+          displayName: 'Build Application'
           inputs:
             command: 'publish'
             publishWebProjects: true
             arguments: '--configuration $(buildConfiguration) --output $(Build.BinariesDirectory)/$(Build.BuildId)'
             modifyOutputPath: false
             workingDirectory: 'src'
+          
         - task: PublishBuildArtifacts@1
+          displayName: 'Publish Web Artifact'
           inputs:
             PathtoPublish: '$(Build.BinariesDirectory)/$(Build.BuildId)'
             ArtifactName: 'drop-$(Build.BuildId)'
             publishLocation: 'Container'
+
         - task: PublishBuildArtifacts@1
           displayName: 'Publish ARM Artifact'
           inputs:
             PathtoPublish: 'deploy/'
             ArtifactName: 'drop-arm'
-            publishLocation: 'Container'    
+            publishLocation: 'Container'
+
+      
