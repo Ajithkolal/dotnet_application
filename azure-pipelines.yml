@@ -19,8 +19,8 @@ stages:
         
         - task: UseDotNet@2
           inputs:
-            packageType: 'runtime'
-            version: '5.x'
+            packageType: 'sdk'
+            version: '2.x'
         - task: DotNetCoreCLI@2
           inputs:
             command: 'publish'
