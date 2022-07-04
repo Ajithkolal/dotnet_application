@@ -13,7 +13,8 @@ stages:
         variables:
           buildConfiguration: 'Release'
 
-        pool: ajithagent
+        pool: 
+          vmImage: 'ubuntu-latest'
 
         steps:
         - task: UseDotNet@2
@@ -49,7 +50,8 @@ stages:
        - group: 'Ajith'
     jobs:
       - deployment: 
-        pool: ajithagent
+        pool:
+          vmImage: 'ubuntu-latest'
         environment: 'Dev' 
         strategy: 
          runOnce:
