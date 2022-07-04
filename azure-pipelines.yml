@@ -46,6 +46,8 @@ stages:
 
   - stage: deploytodev
     displayName: 'Deploy to DEV'
+    variables:
+    - group: 'Ajith'
     jobs:
       - deployment: 
         pool:
