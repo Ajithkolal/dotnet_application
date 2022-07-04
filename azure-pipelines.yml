@@ -10,6 +10,9 @@ stages:
   - stage: Build
     jobs:
       - job: buildwebapp
+    variables:
+        buildConfiguration: 'Release'
+
         pool: 
           vmImage: 'ubuntu-latest'
 
