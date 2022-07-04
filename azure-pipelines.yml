@@ -73,7 +73,20 @@ stages:
                   enableRecursion: false
                   useLegacyPattern: true
                   useLegacyEmptyFeature: false
-                  enableTelemetry: true            
+                  enableTelemetry: true  
+
+              - task: AzureResourceManagerTemplateDeployment@3
+                inputs:
+                  deploymentScope: 'Resource Group'
+                  azureResourceManagerConnection: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  subscriptionId: 'af5a6fb3-b792-4f0e-aa58-7cf18b9cad30'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: 'ajith_kumar'
+                  location: 'Australia East'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/drop-arm/webapp.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/drop-arm/webapp.parameters.json'
+                  deploymentMode: 'Incremental'
 
 
     
