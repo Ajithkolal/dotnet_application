@@ -88,6 +88,14 @@ stages:
                   csmParametersFile: '$(Pipeline.Workspace)/drop-arm/webapp.parameters.json'
                   deploymentMode: 'Incremental'
 
+              - task: AzureRmWebAppDeployment@4
+                inputs:
+                  ConnectionType: 'AzureRM'
+                  azureSubscription: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  appType: 'webApp'
+                  WebAppName: '$(arm_webApp)'
+                  packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+
 
     
               
