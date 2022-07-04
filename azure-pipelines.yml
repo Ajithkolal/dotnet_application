@@ -20,15 +20,22 @@ stages:
         - task: UseDotNet@2
           inputs:
             packageType: 'runtime'
-            version: '5.8.x'
+            version: '5.x'
         - task: DotNetCoreCLI@2
           inputs:
             command: 'publish'
             publishWebProjects: true
             arguments: '--configuration $(buildConfiguration) --output $(Build.BinariesDirectory)/$(Build.BuildId)'
+            modifyOutputPath: false
             workingDirectory: 'src'
         - task: PublishBuildArtifacts@1
           inputs:
             PathtoPublish: '$(Build.BinariesDirectory)/$(Build.BuildId)'
             ArtifactName: 'drop-$(Build.BuildId)'
             publishLocation: 'Container'
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish ARM Artifact'
+          inputs:
+            PathtoPublish: 'deploy/'
+            ArtifactName: 'drop-arm'
+            publishLocation: 'Container'    
