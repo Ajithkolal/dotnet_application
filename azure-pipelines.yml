@@ -74,11 +74,11 @@ stages:
              - task: AzureResourceManagerTemplateDeployment@3
                inputs:
                  deploymentScope: 'Resource Group'
-                 azureResourceManagerConnection: 'Pay-As-You-Go(2)(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                 azureResourceManagerConnection: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
                  subscriptionId: 'af5a6fb3-b792-4f0e-aa58-7cf18b9cad30'
                  action: 'Create Or Update Resource Group'
-                 resourceGroupName: 'Ajith_group'
-                 location: 'East Asia'
+                 resourceGroupName: 'Ajith'
+                 location: 'Australia East'
                  templateLocation: 'Linked artifact'
                  csmFile: '$(Pipelne.Workspace)/drop-arm/webapp.json'
                  csmParametersFile: '$(Pipelne.Workspace)/drop-arm/webapp.parameters.json'
