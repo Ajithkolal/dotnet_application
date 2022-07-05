@@ -103,7 +103,7 @@ stages:
     jobs:
       - deployment: 
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: 'ubuntu-latest'  
         environment: 'Test'
         strategy:
          runOnce:
