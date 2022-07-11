@@ -1,0 +1,150 @@
+
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildWebApp
+        variables:
+          buildConfiguration: 'Release'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+        - task: UseDotNet@2
+          inputs:
+            packageType: 'sdk'
+            version: '5.x'
+        - task: DotNetCoreCLI@2
+          displayName: 'Build Application'
+          inputs:
+            command: 'publish'
+            publishWebProjects: true
+            arguments: '--configuration $(buildConfiguration) --output $(Build.BinariesDirectory)/$(Build.BuildId)'
+            modifyOutputPath: false
+            workingDirectory: 'src'
+          
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Web Artifact'
+          inputs:
+            PathtoPublish: '$(Build.BinariesDirectory)/$(Build.BuildId)'
+            ArtifactName: 'drop-$(Build.BuildId)'
+            publishLocation: 'Container'
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish ARM Artifact'
+          inputs:
+            PathtoPublish: 'deploy/'
+            ArtifactName: 'drop-arm'
+            publishLocation: 'Container'
+            
+  - stage: DeployDev
+    displayName: 'Deploy To Dev'
+    variables: 
+         - group: 'YAML-Releases-Dev'
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'Dev'
+        strategy:
+         runOnce:
+           deploy:
+             steps:
+              - task: replacetokens@5
+                inputs:
+                  rootDirectory: '$(Pipeline.Workspace)/drop-arm'
+                  targetFiles: 'webapp.parameters.json'
+                  encoding: 'auto'
+                  tokenPattern: 'custom'
+                  tokenPrefix: '#'
+                  tokenSuffix: '#'
+                  writeBOM: true
+                  actionOnMissing: 'warn'
+                  keepToken: false
+                  actionOnNoFiles: 'continue'
+                  enableTransforms: false
+                  enableRecursion: false
+                  useLegacyPattern: true
+                  useLegacyEmptyFeature: false
+                  enableTelemetry: true  
+
+              - task: AzureResourceManagerTemplateDeployment@3
+                inputs:
+                  deploymentScope: 'Resource Group'
+                  azureResourceManagerConnection: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  subscriptionId: 'af5a6fb3-b792-4f0e-aa58-7cf18b9cad30'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: 'ajith_kumar'
+                  location: 'Australia East'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/drop-arm/webapp.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/drop-arm/webapp.parameters.json'
+                  deploymentMode: 'Incremental'
+
+              - task: AzureRmWebAppDeployment@4
+                inputs:
+                  ConnectionType: 'AzureRM'
+                  azureSubscription: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  appType: 'webApp'
+                  WebAppName: '$(arm_webApp)'
+                  packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+
+  - stage: DeployTest
+    displayName: 'Deploy To Test'
+    variables: 
+         - group: 'YAML-Releases-Dev'
+    jobs:
+      - deployment: 
+        pool:
+          vmImage: 'ubuntu-latest'
+        environment: 'Test'
+        strategy:
+         runOnce:
+           deploy:
+             steps:
+              - task: replacetokens@5
+                inputs:
+                  rootDirectory: '$(Pipeline.Workspace)/drop-arm'
+                  targetFiles: 'webapp.parameters.json'
+                  encoding: 'auto'
+                  tokenPattern: 'custom'
+                  tokenPrefix: '#'
+                  tokenSuffix: '#'
+                  writeBOM: true
+                  actionOnMissing: 'warn'
+                  keepToken: false
+                  actionOnNoFiles: 'continue'
+                  enableTransforms: false
+                  enableRecursion: false
+                  useLegacyPattern: true
+                  useLegacyEmptyFeature: false
+                  enableTelemetry: true  
+
+              - task: AzureResourceManagerTemplateDeployment@3
+                inputs:
+                  deploymentScope: 'Resource Group'
+                  azureResourceManagerConnection: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  subscriptionId: 'af5a6fb3-b792-4f0e-aa58-7cf18b9cad30'
+                  action: 'Create Or Update Resource Group'
+                  resourceGroupName: 'ajith_kumar'
+                  location: 'Australia East'
+                  templateLocation: 'Linked artifact'
+                  csmFile: '$(Pipeline.Workspace)/drop-arm/webapp.json'
+                  csmParametersFile: '$(Pipeline.Workspace)/drop-arm/webapp.parameters.json'
+                  deploymentMode: 'Incremental'
+
+              - task: AzureRmWebAppDeployment@4
+                inputs:
+                  ConnectionType: 'AzureRM'
+                  azureSubscription: 'Pay-As-You-Go(af5a6fb3-b792-4f0e-aa58-7cf18b9cad30)'
+                  appType: 'webApp'
+                  WebAppName: '$(arm_webApp)'
+                  packageForLinux: '$(Pipeline.Workspace)/**/*.zip'
+                 
